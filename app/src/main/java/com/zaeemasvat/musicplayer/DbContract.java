@@ -14,6 +14,7 @@ public final class DbContract {
 
     public static class UserSongInteraction implements BaseColumns {
         public static final String TABLE_NAME = "USER_SONG_INTERACTION";
+        public static final String COLUMN_NAME_ID = "user_song_interaction_id";
         public static final String COLUMN_NAME_SONG_ID = "song_id";
         public static final String COLUMN_NAME_INTERACTION = "interaction";
     }
@@ -23,8 +24,8 @@ public final class DbContract {
 
     public static class Song implements BaseColumns {
         public static final String TABLE_NAME = "SONG";
-        public static final String COLUMN_NAME_ID = "ID";
-        public static final String COLUMN_NAME_TITLE = "title";
-        public static final String COLUMN_NAME_ARTIST = "artist";
+        public static final String COLUMN_NAME_ID = "song_id";
+        public static final String COLUMN_NAME_TITLE = "song_title";
+        public static final String COLUMN_NAME_ARTIST = "song_artist";
     }
 }

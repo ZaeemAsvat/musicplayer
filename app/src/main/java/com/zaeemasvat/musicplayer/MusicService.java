@@ -163,8 +163,16 @@ public class MusicService extends Service implements
         this.songs = songs;
     }
 
+    public ArrayList<Song> getSongs() {
+        return songs;
+    }
+
     public void setSongPosition(int songPosition) {
         this.songPosition = songPosition;
+    }
+
+    public int getSongPosition() {
+        return songPosition;
     }
 
     public void playSong(){
@@ -176,12 +184,12 @@ public class MusicService extends Service implements
         songTitle = playSong.getTitle();
 
         //get id
-        long currSong = playSong.getId();
+        long currSongId = playSong.getId();
 
         //set uri
         Uri trackUri = ContentUris.withAppendedId(
                 android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                currSong);
+                currSongId);
 
         try{
             player.setDataSource(getApplicationContext(), trackUri);
@@ -237,7 +245,7 @@ public class MusicService extends Service implements
     }
 
     //skip to next
-    public void playNext(){
+    public void playNext() {
 
         if (shuffle) {
             int songPositionTemp = getNextShuffledSongPosition();

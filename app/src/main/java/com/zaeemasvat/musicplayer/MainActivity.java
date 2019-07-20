@@ -1,7 +1,6 @@
 package com.zaeemasvat.musicplayer;
 
 import android.Manifest;
-import android.content.ClipData;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -13,6 +12,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.util.Log;
@@ -45,6 +45,11 @@ public class MainActivity extends AppCompatActivity
     private MusicController musicController;
 
     private boolean paused = false, playbackPaused = false;
+
+    // declare database table interfaces
+    DbHelper db;
+    SongDbHelper songDbHelper;
+    UserSongInteractionDbHelper userSongInteractionDbHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,7 +89,12 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        Log.d("", "here maybe?");
+
+        // initialize databases
+        db = new DbHelper(MainActivity.this);
+        songDbHelper = new SongDbHelper(db.getWritableDatabase());
+        userSongInteractionDbHelper = new UserSongInteractionDbHelper(db.getWritableDatabase());
+      //  songDbHelper.deleteSong(null);
 
         // display songs from user's device
         
@@ -141,7 +151,10 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    public void songPicked(View view){
+    public void songPicked(View view) {
+
+        recordInteraction();
+
         musicSrv.setSongPosition (Integer.parseInt(view.getTag().toString()));
         musicSrv.playSong();
         if (playbackPaused) {
@@ -241,16 +254,14 @@ public class MainActivity extends AppCompatActivity
 
     public void fillSongList() {
 
-        Log.d("", "???");
-
         //retrieve song info
         ContentResolver musicResolver = getContentResolver();
-        Uri musicUri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+        Uri musicUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         Cursor musicCursor = musicResolver.query(musicUri, null, null, null, null);
 
         if (musicCursor != null && musicCursor.moveToFirst()) {
 
-            //get columns
+            //get column indices
             int titleColumn = musicCursor.getColumnIndex
                     (android.provider.MediaStore.Audio.Media.TITLE);
             int idColumn = musicCursor.getColumnIndex
@@ -258,18 +269,39 @@ public class MainActivity extends AppCompatActivity
             int artistColumn = musicCursor.getColumnIndex
                     (android.provider.MediaStore.Audio.Media.ARTIST);
 
-            //add songs to list
             do {
+
+                // get references to this song's data
                 long thisId = musicCursor.getLong(idColumn);
                 String thisTitle = musicCursor.getString(titleColumn);
                 String thisArtist = musicCursor.getString(artistColumn);
-                songList.add(new Song(thisId, thisTitle, thisArtist));
-            }
-            while (musicCursor.moveToNext());
+
+                // query the song in the database
+                ArrayList<String> songWhereQueryArgs = new ArrayList<>(3);
+                songWhereQueryArgs.add(DbContract.Song.COLUMN_NAME_ID + " = " + thisId);
+
+                Song thisSong = songDbHelper.selectSong(songWhereQueryArgs);
+
+                if (thisSong == null) {
+                    // song doesn't exist in the Song database table, so we add it
+                    thisSong = new Song(thisId, thisTitle, thisArtist);
+                    songDbHelper.insertSong(thisSong);
+                }
+
+                // add song to app interface
+                songList.add(thisSong);
+
+            } while (musicCursor.moveToNext());
         }
 
         if (musicCursor != null)
             musicCursor.close();
+
+        // print song db table (testing)
+        ArrayList<Song> songs = songDbHelper.selectSongs(null);
+        Log.d("", "Number of songs: " + songs.size());
+        for (Song song : songs)
+            Log.d("", song.getId() + " " + song.getTitle() + " " + song.getArtist());
     }
 
 
@@ -358,6 +390,9 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void playNext() {
+
+        recordInteraction();
+
         musicSrv.playNext();
         if (playbackPaused) {
             setupMusicController();
@@ -373,6 +408,35 @@ public class MainActivity extends AppCompatActivity
             playbackPaused = false;
         }
         musicController.show(0);
+    }
+
+    /*** record user's interaction with skipped song ***/
+    private void recordInteraction () {
+
+        // get reference to current (skipped song)
+        Song currSong = musicSrv.getSongs().get(musicSrv.getSongPosition());
+
+        Log.e("", "duration: " + getCurrentPosition()/1000 + "\n");
+
+        int lengthPlayed = getCurrentPosition()/1000;
+
+        // create object that holds user-song interaction data
+        UserSongInteraction thisInteraction = new UserSongInteraction();
+        thisInteraction.setSongId(currSong.getId());
+        thisInteraction.setInteractionVerdict(lengthPlayed > 25);
+
+        // store interaction in UserSongInteraction database table
+        userSongInteractionDbHelper.insertUserSongInteraction(thisInteraction);
+
+        // print user-song interaction db table (testing)
+        ArrayList<UserSongInteraction> interactions = userSongInteractionDbHelper.selectUserSongInteractions(null);
+        for (UserSongInteraction i : interactions) {
+            Log.d("", i.getId() + " " + i.getSongId() + i.getInteractionVerdict() + "\n");
+            ArrayList<String> w = new ArrayList<>();
+            w.add("" + DbContract.Song.COLUMN_NAME_ID + " = " + i.getSongId());
+            Song s = songDbHelper.selectSong(w);
+            Log.d("", "" + s.getTitle() + " " + s.getArtist() + "\n");
+        }
     }
 
     @Override

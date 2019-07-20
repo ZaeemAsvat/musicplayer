@@ -20,16 +20,16 @@ public class DbHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
 
         db.execSQL("CREATE TABLE IF NOT EXISTS " + DbContract.Song.TABLE_NAME + " (" +
-                DbContract.Song._ID + " INTEGER PRIMARY KEY," +
+                DbContract.Song.COLUMN_NAME_ID + " INTEGER PRIMARY KEY," +
                 DbContract.Song.COLUMN_NAME_TITLE  + " TEXT," +
                 DbContract.Song.COLUMN_NAME_ARTIST + " TEXT)");
 
         db.execSQL("CREATE TABLE IF NOT EXISTS " + DbContract.UserSongInteraction.TABLE_NAME + " (" +
-                DbContract.UserSongInteraction._ID + " INTEGER PRIMARY KEY," +
+                DbContract.UserSongInteraction.COLUMN_NAME_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
                 DbContract.UserSongInteraction.COLUMN_NAME_INTERACTION + " TEXT," +
                 DbContract.UserSongInteraction.COLUMN_NAME_SONG_ID  + " INTEGER," +
                 " FOREIGN KEY (" + DbContract.UserSongInteraction.COLUMN_NAME_SONG_ID + ") REFERENCES " +
-                    DbContract.Song.TABLE_NAME + "(" + DbContract.Song._ID + "))");
+                    DbContract.Song.TABLE_NAME + "(" + DbContract.Song.COLUMN_NAME_ID + "))");
     }
 
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {

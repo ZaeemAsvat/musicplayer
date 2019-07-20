@@ -3,12 +3,13 @@ package com.zaeemasvat.musicplayer;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 import java.util.ArrayList;
 
 public class UserSongInteractionDbHelper {
 
-    SQLiteDatabase db;
+    private SQLiteDatabase db;
 
     UserSongInteractionDbHelper (SQLiteDatabase db) {
         this.db = db;
@@ -16,14 +17,14 @@ public class UserSongInteractionDbHelper {
 
     public void createTable () {
         db.execSQL("CREATE TABLE IF NOT EXISTS " + DbContract.UserSongInteraction.TABLE_NAME + " (" +
-                DbContract.UserSongInteraction._ID + " INTEGER PRIMARY KEY," +
+                DbContract.UserSongInteraction.COLUMN_NAME_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
                 DbContract.UserSongInteraction.COLUMN_NAME_INTERACTION + " TEXT," +
                 DbContract.UserSongInteraction.COLUMN_NAME_SONG_ID  + " INTEGER," +
                 " FOREIGN KEY (" + DbContract.UserSongInteraction.COLUMN_NAME_SONG_ID + ") REFERENCES " +
-                DbContract.Song.TABLE_NAME + "(" + DbContract.Song._ID + "))");
+                DbContract.Song.TABLE_NAME + "(" + DbContract.Song.COLUMN_NAME_ID + "))");
     }
 
-    public long createUserSongInteraction (UserSongInteraction userSongInteraction) {
+    public long insertUserSongInteraction (UserSongInteraction userSongInteraction) {
 
         ContentValues values = new ContentValues();
         values.put(DbContract.UserSongInteraction.COLUMN_NAME_SONG_ID, userSongInteraction.getSongId());
@@ -34,21 +35,31 @@ public class UserSongInteractionDbHelper {
 
     public ArrayList<UserSongInteraction> selectUserSongInteractions (ArrayList<String> whereArgs) {
 
+        Cursor dbCursor = db.query(DbContract.UserSongInteraction.TABLE_NAME, null, null, null, null, null, null);
+        String[] columnNames = dbCursor.getColumnNames();
+        for (String col : columnNames)
+            Log.e("", col + " ");
+        Log.e("", "\n");
+
         ArrayList<UserSongInteraction> result = new ArrayList<>();
 
         StringBuilder selectQuery = new StringBuilder();
-        selectQuery.append("SELECT * FROM " + DbContract.Song.TABLE_NAME);
-        for (String whereArg : whereArgs)
-            selectQuery.append(" WHERE " + whereArg + " AND ");
-        selectQuery.delete(selectQuery.length() - 5, selectQuery.length());
+        selectQuery.append("SELECT * FROM " + DbContract.UserSongInteraction.TABLE_NAME);
+        if (whereArgs != null) {
+            for (String whereArg : whereArgs)
+                selectQuery.append(" WHERE " + whereArg + " AND ");
+            selectQuery.delete(selectQuery.length() - 5, selectQuery.length());
+        }
 
         Cursor c = db.rawQuery(selectQuery.toString(), null);
 
         if (c != null) {
-            while (c.moveToNext()) {
-                result.add(new UserSongInteraction(c.getLong(c.getColumnIndex(DbContract.UserSongInteraction._ID)),
-                        c.getLong(c.getColumnIndex(DbContract.UserSongInteraction.COLUMN_NAME_SONG_ID)),
-                        c.getInt(c.getColumnIndex(DbContract.UserSongInteraction.COLUMN_NAME_INTERACTION)) > 0));
+            if (c.getCount() > 0) {
+                while (c.moveToNext()) {
+                    result.add(new UserSongInteraction(c.getLong(c.getColumnIndex(DbContract.UserSongInteraction.COLUMN_NAME_ID)),
+                            c.getLong(c.getColumnIndex(DbContract.UserSongInteraction.COLUMN_NAME_SONG_ID)),
+                            c.getInt(c.getColumnIndex(DbContract.UserSongInteraction.COLUMN_NAME_INTERACTION)) > 0));
+                }
             }
             c.close();
         }
@@ -61,7 +72,7 @@ public class UserSongInteractionDbHelper {
         UserSongInteraction result = null;
 
         StringBuilder selectQuery = new StringBuilder();
-        selectQuery.append("SELECT * FROM " + DbContract.Song.TABLE_NAME);
+        selectQuery.append("SELECT * FROM " + DbContract.UserSongInteraction.TABLE_NAME);
         for (String whereArg : whereArgs)
             selectQuery.append(" WHERE " + whereArg + " AND ");
         selectQuery.delete(selectQuery.length() - 5, selectQuery.length());
@@ -70,7 +81,7 @@ public class UserSongInteractionDbHelper {
 
         if (c != null) {
             c.moveToFirst();
-            result = new UserSongInteraction(c.getLong(c.getColumnIndex(DbContract.UserSongInteraction._ID)),
+            result = new UserSongInteraction(c.getLong(c.getColumnIndex(DbContract.UserSongInteraction.COLUMN_NAME_ID)),
                     c.getLong(c.getColumnIndex(DbContract.UserSongInteraction.COLUMN_NAME_SONG_ID)),
                     c.getInt(c.getColumnIndex(DbContract.UserSongInteraction.COLUMN_NAME_INTERACTION)) > 0);
             c.close();

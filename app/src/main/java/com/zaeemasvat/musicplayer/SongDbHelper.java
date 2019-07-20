@@ -6,11 +6,10 @@ import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class SongDbHelper {
 
-    SQLiteDatabase db;
+    private SQLiteDatabase db;
 
     SongDbHelper(SQLiteDatabase db) {
         this.db = db;
@@ -18,18 +17,19 @@ public class SongDbHelper {
 
     public void createTable () {
         db.execSQL("CREATE TABLE IF NOT EXISTS " + DbContract.Song.TABLE_NAME + " (" +
-                DbContract.Song._ID + " INTEGER PRIMARY KEY," +
+                DbContract.Song.COLUMN_NAME_ID + " INTEGER PRIMARY KEY," +
                 DbContract.Song.COLUMN_NAME_TITLE  + " TEXT," +
                 DbContract.Song.COLUMN_NAME_ARTIST + " TEXT)");
     }
 
-    public long createSong (Song song) {
+    public void insertSong(Song song) {
 
         ContentValues values = new ContentValues();
+        values.put(DbContract.Song.COLUMN_NAME_ID, song.getId());
         values.put(DbContract.Song.COLUMN_NAME_TITLE, song.getTitle());
         values.put(DbContract.Song.COLUMN_NAME_ARTIST, song.getArtist());
 
-        return db.insert(DbContract.Song.TABLE_NAME, null, values);
+        db.insert(DbContract.Song.TABLE_NAME, null, values);
     }
 
     public ArrayList<Song> selectSongs (ArrayList<String> whereArgs) {
@@ -38,17 +38,21 @@ public class SongDbHelper {
 
         StringBuilder selectQuery = new StringBuilder();
         selectQuery.append("SELECT * FROM " + DbContract.Song.TABLE_NAME);
-        for (String whereArg : whereArgs)
-            selectQuery.append(" WHERE " + whereArg + " AND ");
-        selectQuery.delete(selectQuery.length() - 5, selectQuery.length());
+        if (whereArgs != null) {
+            for (String whereArg : whereArgs)
+                selectQuery.append(" WHERE " + whereArg + " AND ");
+            selectQuery.delete(selectQuery.length() - 5, selectQuery.length());
+        }
 
         Cursor c = db.rawQuery(selectQuery.toString(), null);
 
         if (c != null) {
-            while (c.moveToNext()) {
-                result.add(new Song(c.getLong(c.getColumnIndex(DbContract.Song.COLUMN_NAME_ID)),
-                        c.getString(c.getColumnIndex(DbContract.Song.COLUMN_NAME_TITLE)),
-                        c.getString(c.getColumnIndex(DbContract.Song.COLUMN_NAME_ARTIST))));
+            if (c.getCount() > 0) {
+                while (c.moveToNext()) {
+                    result.add(new Song(c.getLong(c.getColumnIndex(DbContract.Song.COLUMN_NAME_ID)),
+                            c.getString(c.getColumnIndex(DbContract.Song.COLUMN_NAME_TITLE)),
+                            c.getString(c.getColumnIndex(DbContract.Song.COLUMN_NAME_ARTIST))));
+                }
             }
             c.close();
         }
@@ -69,10 +73,12 @@ public class SongDbHelper {
         Cursor c = db.rawQuery(selectQuery.toString(), null);
 
         if (c != null) {
-            c.moveToFirst();
-            result = new Song(c.getLong(c.getColumnIndex(DbContract.Song.COLUMN_NAME_ID)),
-                    c.getString(c.getColumnIndex(DbContract.Song.COLUMN_NAME_TITLE)),
-                    c.getString(c.getColumnIndex(DbContract.Song.COLUMN_NAME_ARTIST)));
+            if (c.getCount() > 0) {
+                c.moveToFirst();
+                result = new Song(c.getLong(c.getColumnIndex(DbContract.Song.COLUMN_NAME_ID)),
+                        c.getString(c.getColumnIndex(DbContract.Song.COLUMN_NAME_TITLE)),
+                        c.getString(c.getColumnIndex(DbContract.Song.COLUMN_NAME_ARTIST)));
+            }
             c.close();
         }
 
@@ -83,9 +89,11 @@ public class SongDbHelper {
 
         StringBuilder deleteQuery = new StringBuilder();
         deleteQuery.append("DELETE FROM " + DbContract.Song.TABLE_NAME);
-        for (String whereArg : whereArgs)
-            deleteQuery.append(" WHERE " + whereArg + " AND ");
-        deleteQuery.delete(deleteQuery.length() - 5, deleteQuery.length());
+        if (whereArgs != null) {
+            for (String whereArg : whereArgs)
+                deleteQuery.append(" WHERE " + whereArg + " AND ");
+            deleteQuery.delete(deleteQuery.length() - 5, deleteQuery.length());
+        }
 
         db.execSQL(deleteQuery.toString());
     }
