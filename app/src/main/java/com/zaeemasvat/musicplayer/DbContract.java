@@ -28,4 +28,14 @@ public final class DbContract {
         public static final String COLUMN_NAME_TITLE = "song_title";
         public static final String COLUMN_NAME_ARTIST = "song_artist";
     }
+
+
+    // --------------------------------- SONG FEATURE DATA ----------------------------------------
+    public static class SongFeatures implements BaseColumns {
+        public static final String TABLE_NAME = "SONG_FEATURES";
+        public static final String COLUMN_NAME_SONG_ID = "song_id";
+        public static final String COLUMN_NAME_MFCC1 = "feature_mfcc_1";
+        public static final String COLUMN_NAME_MFCC2 = "feature_mfcc_2";
+        public static final String COLUMN_NAME_MFCC3 = "feature_mfcc_3";
+    }
 }
