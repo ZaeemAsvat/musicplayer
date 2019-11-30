@@ -32,12 +32,13 @@ public class FeatureExtractor {
 
     public float[] getMFCC (String filePath) throws FileNotFoundException {
 
-        final float[] result = new float[10];
+        final float[] result = new float[40];
 
         int sampleRate = 44100;
         int bufferSize = 1024;
         int bufferOverlap = 128;
 //        new AndroidFFMPEGLocator(this);
+        Log.d("", filePath + "\n");
         InputStream inStream = new FileInputStream(filePath);
         AudioDispatcher dispatcher = new AudioDispatcher(new UniversalAudioInputStream(inStream, new TarsosDSPAudioFormat(sampleRate, bufferSize, 1, true, true)), bufferSize, bufferOverlap);
         final MFCC mfcc = new MFCC(bufferSize, sampleRate, 40, 50, 300, 3000);
@@ -48,13 +49,9 @@ public class FeatureExtractor {
             @Override
             public void processingFinished() {
 
-                //vvv error b/c mfcc instance variable is null
                 float[] temp = mfcc.getMFCC();
-                System.out.println(temp.length);
-                int size = Math.min(result.length, temp.length);
-                for (int i = 0; i < size; i++)
+                for (int i = 0; i < 40; i++)
                     result[i] = temp[i];
-                System.out.println("DONE");
             }
 
             @Override
@@ -63,6 +60,7 @@ public class FeatureExtractor {
                 return true;
             }
         });
+
         dispatcher.run();
 
         return result;

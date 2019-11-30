@@ -22,7 +22,7 @@ public class SongFeatureDbHelper {
                     DbContract.Song.TABLE_NAME + "(" + DbContract.Song.COLUMN_NAME_ID + "))");
     }
 
-    public long insertUserSongInteraction (SongFeatures songFeatures) {
+    public long insertSongFeatures (SongFeatures songFeatures) {
 
         ContentValues values = new ContentValues();
         values.put(DbContract.SongFeatures.COLUMN_NAME_MFCC1, songFeatures.getSongFeature(SongFeature.mfcc1));
@@ -33,7 +33,7 @@ public class SongFeatureDbHelper {
         return db.insert(DbContract.SongFeatures.TABLE_NAME, null, values);
     }
 
-    public SongFeatures selectUserSongInteractions (int song_id) {
+    public SongFeatures selectSongFeatures (long song_id) {
 
         SongFeatures result = null;
 
@@ -62,7 +62,7 @@ public class SongFeatureDbHelper {
         return result;
     }
 
-    public void deleteUserSongInteraction (ArrayList<String> whereArgs) {
+    public void deleteSongFeatures (ArrayList<String> whereArgs) {
 
         StringBuilder deleteQuery = new StringBuilder();
         deleteQuery.append("DELETE FROM " + DbContract.SongFeatures.TABLE_NAME);

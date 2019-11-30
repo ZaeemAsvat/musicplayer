@@ -22,7 +22,8 @@ public class DbHelper extends SQLiteOpenHelper {
         db.execSQL("CREATE TABLE IF NOT EXISTS " + DbContract.Song.TABLE_NAME + " (" +
                 DbContract.Song.COLUMN_NAME_ID + " INTEGER PRIMARY KEY," +
                 DbContract.Song.COLUMN_NAME_TITLE  + " TEXT," +
-                DbContract.Song.COLUMN_NAME_ARTIST + " TEXT)");
+                DbContract.Song.COLUMN_NAME_ARTIST + " TEXT," +
+                DbContract.Song.COLUMN_NAME_PATH + " TEXT)");
 
         db.execSQL("CREATE TABLE IF NOT EXISTS " + DbContract.UserSongInteraction.TABLE_NAME + " (" +
                 DbContract.UserSongInteraction.COLUMN_NAME_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +

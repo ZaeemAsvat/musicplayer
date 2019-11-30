@@ -19,7 +19,8 @@ public class SongDbHelper {
         db.execSQL("CREATE TABLE IF NOT EXISTS " + DbContract.Song.TABLE_NAME + " (" +
                 DbContract.Song.COLUMN_NAME_ID + " INTEGER PRIMARY KEY," +
                 DbContract.Song.COLUMN_NAME_TITLE  + " TEXT," +
-                DbContract.Song.COLUMN_NAME_ARTIST + " TEXT)");
+                DbContract.Song.COLUMN_NAME_ARTIST + " TEXT," +
+                DbContract.Song.COLUMN_NAME_PATH + " TEXT)");
     }
 
     public void insertSong(Song song) {
@@ -28,6 +29,7 @@ public class SongDbHelper {
         values.put(DbContract.Song.COLUMN_NAME_ID, song.getId());
         values.put(DbContract.Song.COLUMN_NAME_TITLE, song.getTitle());
         values.put(DbContract.Song.COLUMN_NAME_ARTIST, song.getArtist());
+        values.put(DbContract.Song.COLUMN_NAME_PATH, song.getPath());
 
         db.insert(DbContract.Song.TABLE_NAME, null, values);
     }
@@ -51,7 +53,8 @@ public class SongDbHelper {
                 while (c.moveToNext()) {
                     result.add(new Song(c.getLong(c.getColumnIndex(DbContract.Song.COLUMN_NAME_ID)),
                             c.getString(c.getColumnIndex(DbContract.Song.COLUMN_NAME_TITLE)),
-                            c.getString(c.getColumnIndex(DbContract.Song.COLUMN_NAME_ARTIST))));
+                            c.getString(c.getColumnIndex(DbContract.Song.COLUMN_NAME_ARTIST)),
+                            c.getString(c.getColumnIndex(DbContract.Song.COLUMN_NAME_PATH))));
                 }
             }
             c.close();
@@ -77,7 +80,8 @@ public class SongDbHelper {
                 c.moveToFirst();
                 result = new Song(c.getLong(c.getColumnIndex(DbContract.Song.COLUMN_NAME_ID)),
                         c.getString(c.getColumnIndex(DbContract.Song.COLUMN_NAME_TITLE)),
-                        c.getString(c.getColumnIndex(DbContract.Song.COLUMN_NAME_ARTIST)));
+                        c.getString(c.getColumnIndex(DbContract.Song.COLUMN_NAME_ARTIST)),
+                        c.getString(c.getColumnIndex(DbContract.Song.COLUMN_NAME_PATH)));
             }
             c.close();
         }
@@ -109,6 +113,10 @@ public class SongDbHelper {
         updateQuery.delete(updateQuery.length() - 5, updateQuery.length());
 
         db.execSQL(updateQuery.toString(), null);
+    }
+
+    public void dropTable() {
+        db.execSQL("DROP TABLE IF EXISTS " + DbContract.Song.TABLE_NAME);
     }
 
 

@@ -12,17 +12,17 @@ enum SongFeature {
 
 public class SongFeatures {
 
-    private int song_id;
+    private long song_id;
     private Float[] songFeatures;
 
-    SongFeatures (int song_id, Float[] songFeatures) {
+    SongFeatures (long song_id, Float[] songFeatures) {
         this.song_id = song_id;
         this.songFeatures = new Float[songFeatures.length];
         for (int i = 0; i < songFeatures.length; i++)
             this.songFeatures[i] = songFeatures[i];
     }
 
-    public int getSong_id() {
+    public long getSong_id() {
         return song_id;
     }
 

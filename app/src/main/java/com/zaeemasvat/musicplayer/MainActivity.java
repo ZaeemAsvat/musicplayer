@@ -3,6 +3,7 @@ package com.zaeemasvat.musicplayer;
 import android.Manifest;
 import android.content.ComponentName;
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
@@ -26,6 +27,8 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ListView;
+
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -50,6 +53,7 @@ public class MainActivity extends AppCompatActivity
     DbHelper db;
     SongDbHelper songDbHelper;
     UserSongInteractionDbHelper userSongInteractionDbHelper;
+    SongFeatureDbHelper songFeatureDbHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,6 +98,12 @@ public class MainActivity extends AppCompatActivity
         db = new DbHelper(MainActivity.this);
         songDbHelper = new SongDbHelper(db.getWritableDatabase());
         userSongInteractionDbHelper = new UserSongInteractionDbHelper(db.getWritableDatabase());
+        songFeatureDbHelper = new SongFeatureDbHelper(db.getWritableDatabase());
+
+        songDbHelper.dropTable();
+        songDbHelper.createTable();
+        userSongInteractionDbHelper.dropTable();
+        userSongInteractionDbHelper.createTable();
       //  songDbHelper.deleteSong(null);
 
         // display songs from user's device
@@ -102,6 +112,12 @@ public class MainActivity extends AppCompatActivity
         songList = new ArrayList<>();
 
         fillSongList();
+
+        try {
+            extractFeaturesFromSongs();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
 
         Collections.sort(songList, new Comparator<Song>() {
             public int compare(Song a, Song b) {
@@ -268,6 +284,8 @@ public class MainActivity extends AppCompatActivity
                     (android.provider.MediaStore.Audio.Media._ID);
             int artistColumn = musicCursor.getColumnIndex
                     (android.provider.MediaStore.Audio.Media.ARTIST);
+            int fullpathColumn = musicCursor
+                    .getColumnIndex(MediaStore.Audio.Media.DATA);
 
             do {
 
@@ -275,6 +293,7 @@ public class MainActivity extends AppCompatActivity
                 long thisId = musicCursor.getLong(idColumn);
                 String thisTitle = musicCursor.getString(titleColumn);
                 String thisArtist = musicCursor.getString(artistColumn);
+                String thisFullPath = musicCursor.getString(fullpathColumn);
 
                 // query the song in the database
                 ArrayList<String> songWhereQueryArgs = new ArrayList<>(3);
@@ -284,7 +303,7 @@ public class MainActivity extends AppCompatActivity
 
                 if (thisSong == null) {
                     // song doesn't exist in the Song database table, so we add it
-                    thisSong = new Song(thisId, thisTitle, thisArtist);
+                    thisSong = new Song(thisId, thisTitle, thisArtist, thisFullPath);
                     songDbHelper.insertSong(thisSong);
                 }
 
@@ -298,10 +317,29 @@ public class MainActivity extends AppCompatActivity
             musicCursor.close();
 
         // print song db table (testing)
-        ArrayList<Song> songs = songDbHelper.selectSongs(null);
-        Log.d("", "Number of songs: " + songs.size());
-        for (Song song : songs)
-            Log.d("", song.getId() + " " + song.getTitle() + " " + song.getArtist());
+//        ArrayList<Song>songs = songDbHelper.selectSongs(null);
+//        Log.d("", "Number of songs: " + songs.size());
+//        for (Song song : songs)
+//            Log.d("", song.getId() + " " + song.getTitle() + " " + song.getArtist());
+    }
+
+
+    private void extractFeaturesFromSongs() throws FileNotFoundException {
+
+        // get all songs
+        ArrayList<Song>songs = songDbHelper.selectSongs(null);
+
+        for (Song song : songs) {
+
+            if (songFeatureDbHelper.selectSongFeatures(song.getId()) == null) {
+                // features of this song haven't been extracted yet (likely a newly added song)
+
+                // ------------------------ just testing ----------------------------------
+
+                float[] mfcc = new FeatureExtractor().getMFCC(song.getPath());
+
+            }
+        }
     }
 
 

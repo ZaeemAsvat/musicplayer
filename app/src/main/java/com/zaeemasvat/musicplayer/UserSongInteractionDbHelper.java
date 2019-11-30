@@ -114,5 +114,9 @@ public class UserSongInteractionDbHelper {
         db.execSQL(updateQuery.toString(), null);
     }
 
+    public void dropTable () {
+        db.execSQL("DROP TABLE IF EXISTS " + DbContract.UserSongInteraction.TABLE_NAME);
+    }
+
 }
 

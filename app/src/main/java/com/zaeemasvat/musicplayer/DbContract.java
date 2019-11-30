@@ -27,6 +27,7 @@ public final class DbContract {
         public static final String COLUMN_NAME_ID = "song_id";
         public static final String COLUMN_NAME_TITLE = "song_title";
         public static final String COLUMN_NAME_ARTIST = "song_artist";
+        public static final String COLUMN_NAME_PATH = "song_path";
     }
 
 
