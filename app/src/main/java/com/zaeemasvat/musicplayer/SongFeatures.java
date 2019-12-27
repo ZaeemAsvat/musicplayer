@@ -1,23 +1,13 @@
 package com.zaeemasvat.musicplayer;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-
-enum SongFeature {
-    mfcc1,
-    mfcc2,
-    mfcc3,
-    numSongFeatures
-}
-
 public class SongFeatures {
 
     private long song_id;
-    private Float[] songFeatures;
+    private float[] songFeatures;
 
-    SongFeatures (long song_id, Float[] songFeatures) {
+    SongFeatures (long song_id, float[] songFeatures) {
         this.song_id = song_id;
-        this.songFeatures = new Float[songFeatures.length];
+        this.songFeatures = new float[songFeatures.length];
         for (int i = 0; i < songFeatures.length; i++)
             this.songFeatures[i] = songFeatures[i];
     }
@@ -26,28 +16,12 @@ public class SongFeatures {
         return song_id;
     }
 
-    public void setSongFeatures(Float[] songFeatures) {
+    public void setSongFeatures(float[] songFeatures) {
         this.songFeatures = songFeatures;
     }
 
-    public Float[] getSongFeatures() {
+    public float[] getSongFeatures() {
         return songFeatures;
     }
-
-    public void setSongFeature(SongFeature songFeature, float songFeatureVal) {
-
-        if (songFeature.ordinal() < SongFeature.numSongFeatures.ordinal())
-            songFeatures[songFeature.ordinal()] = songFeatureVal;
-    }
-
-    public float getSongFeature(SongFeature songFeature) {
-
-        float featureVal = 0f;
-        if (songFeature.ordinal() < SongFeature.numSongFeatures.ordinal())
-            featureVal = songFeatures[songFeature.ordinal()];
-
-        return featureVal;
-    }
-
 
 }

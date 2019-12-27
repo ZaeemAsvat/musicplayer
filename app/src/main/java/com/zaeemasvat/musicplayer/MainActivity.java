@@ -3,7 +3,6 @@ package com.zaeemasvat.musicplayer;
 import android.Manifest;
 import android.content.ComponentName;
 import android.content.ContentResolver;
-import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
@@ -130,11 +129,6 @@ public class MainActivity extends AppCompatActivity
 
         setupMusicController();
 
-
-
-
-      //  FeatureExtractor featureExtxractor = new FeatureExtractor();
-      //  featureExtractor.getSpectralCentroid("/home/zaeemasvat_/AndroidStudioProjects/musicplayer/app/src/main/java/com/zaeema");
     }
 
     //connect to the service
@@ -326,6 +320,8 @@ public class MainActivity extends AppCompatActivity
 
     private void extractFeaturesFromSongs() throws FileNotFoundException {
 
+        // TODO: Test this function
+
         // get all songs
         ArrayList<Song>songs = songDbHelper.selectSongs(null);
 
@@ -337,7 +333,27 @@ public class MainActivity extends AppCompatActivity
                 // ------------------------ just testing ----------------------------------
 
                 float[] mfcc = new FeatureExtractor().getMFCC(song.getPath());
+                SongFeatures thisSongFeatures = new SongFeatures(song.getId(), mfcc);
+                songFeatureDbHelper.insertSongFeatures(thisSongFeatures);
 
+            }
+        }
+    }
+
+
+    private void updateUserSongInteractions() {
+
+        // TODO: Test this function
+
+        // get all songs
+        ArrayList<Song> songs = songDbHelper.selectSongs(null);
+
+        for (Song song : songs) {
+
+            if (userSongInteractionDbHelper.selectUserSongInteractions(song.getId()) == null) {
+                // this song's user interaction data hasn't been initialized yet
+
+                userSongInteractionDbHelper.insertUserSongInteraction(new UserSongInteraction(song.getId(), 0, 0));
             }
         }
     }
@@ -458,18 +474,22 @@ public class MainActivity extends AppCompatActivity
 
         int lengthPlayed = getCurrentPosition()/1000;
 
-        // create object that holds user-song interaction data
-        UserSongInteraction thisInteraction = new UserSongInteraction();
-        thisInteraction.setSongId(currSong.getId());
-        thisInteraction.setInteractionVerdict(lengthPlayed > 25);
+        // get database entry for this song's user-song interaction data
+        UserSongInteraction thisSongInteractions = userSongInteractionDbHelper.selectUserSongInteractions(currSong.getId());
+
+        // record this interaction
+        if (lengthPlayed > 25)
+            thisSongInteractions.setNum_positive_interactions(thisSongInteractions.getNum_positive_interactions() + 1);
+        else
+            thisSongInteractions.setNum_negative_interactions(thisSongInteractions.getNum_negative_interactions() + 1);
 
         // store interaction in UserSongInteraction database table
-        userSongInteractionDbHelper.insertUserSongInteraction(thisInteraction);
+        userSongInteractionDbHelper.insertUserSongInteraction(thisSongInteractions);
 
         // print user-song interaction db table (testing)
         ArrayList<UserSongInteraction> interactions = userSongInteractionDbHelper.selectUserSongInteractions(null);
         for (UserSongInteraction i : interactions) {
-            Log.d("", i.getId() + " " + i.getSongId() + i.getInteractionVerdict() + "\n");
+            Log.d("", i.getSongId() + i.getNum_positive_interactions() + " " + i.getNum_negative_interactions() + "\n");
             ArrayList<String> w = new ArrayList<>();
             w.add("" + DbContract.Song.COLUMN_NAME_ID + " = " + i.getSongId());
             Song s = songDbHelper.selectSong(w);

@@ -14,21 +14,22 @@ public class SongFeatureDbHelper {
     SongFeatureDbHelper (SQLiteDatabase db) { this.db = db;}
 
     public void createTable () {
-        db.execSQL("CREATE TABLE IF NOT EXISTS " + DbContract.SongFeatures.TABLE_NAME + " (" +
-                    DbContract.SongFeatures.COLUMN_NAME_MFCC1  + " REAL," +
-                    DbContract.SongFeatures.COLUMN_NAME_MFCC2  + " REAL," +
-                    DbContract.SongFeatures.COLUMN_NAME_MFCC3  + " REAL," +
-                    " FOREIGN KEY (" + DbContract.SongFeatures.COLUMN_NAME_SONG_ID + ") REFERENCES " +
+
+        StringBuilder createTableBuilderStr = new StringBuilder();
+        createTableBuilderStr.append("CREATE TABLE IF NOT EXISTS " + DbContract.SongFeatures.TABLE_NAME + " (");
+        for (int i = 0; i < 40; i++)
+            createTableBuilderStr.append(DbContract.SongFeatures.COLUMN_NAME_MFCC + "_" + i + " REAL,");
+        createTableBuilderStr.append(" FOREIGN KEY (" + DbContract.SongFeatures.COLUMN_NAME_SONG_ID + ") REFERENCES " +
                     DbContract.Song.TABLE_NAME + "(" + DbContract.Song.COLUMN_NAME_ID + "))");
+
+        db.execSQL(createTableBuilderStr.toString());
     }
 
     public long insertSongFeatures (SongFeatures songFeatures) {
 
         ContentValues values = new ContentValues();
-        values.put(DbContract.SongFeatures.COLUMN_NAME_MFCC1, songFeatures.getSongFeature(SongFeature.mfcc1));
-        values.put(DbContract.SongFeatures.COLUMN_NAME_MFCC2, songFeatures.getSongFeature(SongFeature.mfcc2));
-        values.put(DbContract.SongFeatures.COLUMN_NAME_MFCC3, songFeatures.getSongFeature(SongFeature.mfcc3));
-        values.put(DbContract.SongFeatures.COLUMN_NAME_SONG_ID, songFeatures.getSong_id());
+        for (int i = 0; i < songFeatures.getSongFeatures().length; i++)
+            values.put(DbContract.SongFeatures.COLUMN_NAME_MFCC + "_" + i, songFeatures.getSongFeatures()[i]);
 
         return db.insert(DbContract.SongFeatures.TABLE_NAME, null, values);
     }
@@ -37,22 +38,20 @@ public class SongFeatureDbHelper {
 
         SongFeatures result = null;
 
-        StringBuilder selectQuery = new StringBuilder();
-        selectQuery.append("SELECT * FROM " + DbContract.UserSongInteraction.TABLE_NAME + " WHERE " +
-                            DbContract.SongFeatures.COLUMN_NAME_SONG_ID + " = " + song_id);
+        String selectQuery = "SELECT * FROM " + DbContract.SongFeatures.TABLE_NAME + " WHERE " +
+                            DbContract.SongFeatures.COLUMN_NAME_SONG_ID + " = " + song_id;
 
-        Cursor c = db.rawQuery(selectQuery.toString(), null);
+        Cursor c = db.rawQuery(selectQuery, null);
 
         if (c != null) {
 
             if (c.getCount() == 1) {
 
                 c.moveToFirst();
+                float[] featureVals = new float[c.getColumnCount() - 1];
+                for (int i = 0; i < featureVals.length; i++)
+                    featureVals[i] = c.getFloat(c.getColumnIndex(DbContract.SongFeatures.COLUMN_NAME_MFCC + "_" + i));
 
-                Float[] featureVals = new Float[SongFeature.numSongFeatures.ordinal()];
-                featureVals[0] = c.getFloat(c.getColumnIndex(DbContract.SongFeatures.COLUMN_NAME_MFCC1));
-                featureVals[1] = c.getFloat(c.getColumnIndex(DbContract.SongFeatures.COLUMN_NAME_MFCC2));
-                featureVals[2] = c.getFloat(c.getColumnIndex(DbContract.SongFeatures.COLUMN_NAME_MFCC3));
                 result = new SongFeatures(song_id, featureVals);
             }
 
@@ -71,6 +70,10 @@ public class SongFeatureDbHelper {
         deleteQuery.delete(deleteQuery.length() - 5, deleteQuery.length());
 
         db.execSQL(deleteQuery.toString(), null);
+    }
+
+    public void dropTable () {
+        db.execSQL("DROP TABLE IF EXISTS " + DbContract.SongFeatures.TABLE_NAME);
     }
 
 }

@@ -2,24 +2,16 @@ package com.zaeemasvat.musicplayer;
 
 public class UserSongInteraction {
 
-    private long id;
     private long song_id;
-    private boolean interactionVerdict;
+    private int num_positive_interactions;
+    private int num_negative_interactions;
 
     UserSongInteraction() {}
 
-    UserSongInteraction(long id, long song_id, boolean interactionVerdict) {
-        this.id = id;
+    UserSongInteraction(long song_id, int num_positive_interactions, int num_negative_interactions) {
         this.song_id = song_id;
-        this.interactionVerdict = interactionVerdict;
-    }
-
-    public void setId(long id) {
-        this.id = id;
-    }
-
-    public long getId() {
-        return id;
+        this.num_positive_interactions = num_positive_interactions;
+        this.num_negative_interactions = num_negative_interactions;
     }
 
     public void setSongId(long song_id) {
@@ -30,11 +22,11 @@ public class UserSongInteraction {
         return song_id;
     }
 
-    public void setInteractionVerdict(boolean interactionVerdict) {
-        this.interactionVerdict = interactionVerdict;
-    }
+    public int getNum_positive_interactions() { return num_positive_interactions; }
 
-    public boolean getInteractionVerdict() {
-        return interactionVerdict;
-    }
+    public int getNum_negative_interactions() { return num_negative_interactions; }
+
+    public void setNum_positive_interactions(int num_positive_interactions) { this.num_positive_interactions = num_positive_interactions; }
+
+    public void setNum_negative_interactions(int num_negative_interactions) { this.num_negative_interactions = num_negative_interactions; }
 }

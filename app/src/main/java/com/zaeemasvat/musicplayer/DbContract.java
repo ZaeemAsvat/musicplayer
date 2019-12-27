@@ -16,7 +16,8 @@ public final class DbContract {
         public static final String TABLE_NAME = "USER_SONG_INTERACTION";
         public static final String COLUMN_NAME_ID = "user_song_interaction_id";
         public static final String COLUMN_NAME_SONG_ID = "song_id";
-        public static final String COLUMN_NAME_INTERACTION = "interaction";
+        public static final String COLUMN_NAME_NUM_POSITIVE_INTERACTIONS = "num_positive_interaction";
+        public static final String COLUMN_NAME_NUM_NEGATIVE_INTERACTIONS = "num_negative_interaction";
     }
 
 
@@ -35,8 +36,6 @@ public final class DbContract {
     public static class SongFeatures implements BaseColumns {
         public static final String TABLE_NAME = "SONG_FEATURES";
         public static final String COLUMN_NAME_SONG_ID = "song_id";
-        public static final String COLUMN_NAME_MFCC1 = "feature_mfcc_1";
-        public static final String COLUMN_NAME_MFCC2 = "feature_mfcc_2";
-        public static final String COLUMN_NAME_MFCC3 = "feature_mfcc_3";
+        public static final String COLUMN_NAME_MFCC = "feature_mfcc"; // multiple values exist
     }
 }

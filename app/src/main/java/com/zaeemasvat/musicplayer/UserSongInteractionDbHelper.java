@@ -17,8 +17,8 @@ public class UserSongInteractionDbHelper {
 
     public void createTable () {
         db.execSQL("CREATE TABLE IF NOT EXISTS " + DbContract.UserSongInteraction.TABLE_NAME + " (" +
-                DbContract.UserSongInteraction.COLUMN_NAME_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
-                DbContract.UserSongInteraction.COLUMN_NAME_INTERACTION + " TEXT," +
+                DbContract.UserSongInteraction.COLUMN_NAME_NUM_POSITIVE_INTERACTIONS + " INTEGER," +
+                DbContract.UserSongInteraction.COLUMN_NAME_NUM_NEGATIVE_INTERACTIONS + " INTEGER," +
                 DbContract.UserSongInteraction.COLUMN_NAME_SONG_ID  + " INTEGER," +
                 " FOREIGN KEY (" + DbContract.UserSongInteraction.COLUMN_NAME_SONG_ID + ") REFERENCES " +
                 DbContract.Song.TABLE_NAME + "(" + DbContract.Song.COLUMN_NAME_ID + "))");
@@ -28,18 +28,13 @@ public class UserSongInteractionDbHelper {
 
         ContentValues values = new ContentValues();
         values.put(DbContract.UserSongInteraction.COLUMN_NAME_SONG_ID, userSongInteraction.getSongId());
-        values.put(DbContract.UserSongInteraction.COLUMN_NAME_INTERACTION, userSongInteraction.getInteractionVerdict());
+        values.put(DbContract.UserSongInteraction.COLUMN_NAME_NUM_POSITIVE_INTERACTIONS, userSongInteraction.getNum_positive_interactions());
+        values.put(DbContract.UserSongInteraction.COLUMN_NAME_NUM_NEGATIVE_INTERACTIONS, userSongInteraction.getNum_negative_interactions());
 
         return db.insert(DbContract.UserSongInteraction.TABLE_NAME, null, values);
     }
 
     public ArrayList<UserSongInteraction> selectUserSongInteractions (ArrayList<String> whereArgs) {
-
-        Cursor dbCursor = db.query(DbContract.UserSongInteraction.TABLE_NAME, null, null, null, null, null, null);
-        String[] columnNames = dbCursor.getColumnNames();
-        for (String col : columnNames)
-            Log.e("", col + " ");
-        Log.e("", "\n");
 
         ArrayList<UserSongInteraction> result = new ArrayList<>();
 
@@ -56,9 +51,9 @@ public class UserSongInteractionDbHelper {
         if (c != null) {
             if (c.getCount() > 0) {
                 while (c.moveToNext()) {
-                    result.add(new UserSongInteraction(c.getLong(c.getColumnIndex(DbContract.UserSongInteraction.COLUMN_NAME_ID)),
-                            c.getLong(c.getColumnIndex(DbContract.UserSongInteraction.COLUMN_NAME_SONG_ID)),
-                            c.getInt(c.getColumnIndex(DbContract.UserSongInteraction.COLUMN_NAME_INTERACTION)) > 0));
+                    result.add(new UserSongInteraction(c.getLong(c.getColumnIndex(DbContract.UserSongInteraction.COLUMN_NAME_SONG_ID)),
+                            c.getInt(c.getColumnIndex(DbContract.UserSongInteraction.COLUMN_NAME_NUM_POSITIVE_INTERACTIONS)),
+                            c.getInt(c.getColumnIndex(DbContract.UserSongInteraction.COLUMN_NAME_NUM_NEGATIVE_INTERACTIONS))));
                 }
             }
             c.close();
@@ -67,7 +62,7 @@ public class UserSongInteractionDbHelper {
         return result;
     }
 
-    public UserSongInteraction selectUseSongInteracion (ArrayList<String> whereArgs) {
+    public UserSongInteraction selectUserSongInteracions (ArrayList<String> whereArgs) {
 
         UserSongInteraction result = null;
 
@@ -81,9 +76,33 @@ public class UserSongInteractionDbHelper {
 
         if (c != null) {
             c.moveToFirst();
-            result = new UserSongInteraction(c.getLong(c.getColumnIndex(DbContract.UserSongInteraction.COLUMN_NAME_ID)),
-                    c.getLong(c.getColumnIndex(DbContract.UserSongInteraction.COLUMN_NAME_SONG_ID)),
-                    c.getInt(c.getColumnIndex(DbContract.UserSongInteraction.COLUMN_NAME_INTERACTION)) > 0);
+            result = new UserSongInteraction(c.getLong(c.getColumnIndex(DbContract.UserSongInteraction.COLUMN_NAME_SONG_ID)),
+                    c.getInt(c.getColumnIndex(DbContract.UserSongInteraction.COLUMN_NAME_NUM_POSITIVE_INTERACTIONS)),
+                    c.getInt(c.getColumnIndex(DbContract.UserSongInteraction.COLUMN_NAME_NUM_NEGATIVE_INTERACTIONS)));
+            c.close();
+        }
+
+        return result;
+    }
+
+    public UserSongInteraction selectUserSongInteractions(long song_id) {
+
+        UserSongInteraction result = null;
+
+        String selectQuery = "SELECT * FROM " + DbContract.UserSongInteraction.TABLE_NAME + " WHERE " +
+                DbContract.SongFeatures.COLUMN_NAME_SONG_ID + " = " + song_id;
+
+        Cursor c = db.rawQuery(selectQuery, null);
+
+        if (c != null) {
+
+            if (c.getCount() == 1) {
+                c.moveToFirst();
+                result = new UserSongInteraction(song_id,
+                        c.getInt(c.getColumnIndex(DbContract.UserSongInteraction.COLUMN_NAME_NUM_POSITIVE_INTERACTIONS)),
+                        c.getInt(c.getColumnIndex(DbContract.UserSongInteraction.COLUMN_NAME_NUM_NEGATIVE_INTERACTIONS)));
+            }
+
             c.close();
         }
 
@@ -106,7 +125,8 @@ public class UserSongInteractionDbHelper {
         StringBuilder updateQuery = new StringBuilder();
         updateQuery.append("UPDATE " + DbContract.UserSongInteraction.TABLE_NAME
                 + " SET " + DbContract.UserSongInteraction.COLUMN_NAME_SONG_ID + " = " + userSongInteraction.getSongId()
-                + ", " + DbContract.UserSongInteraction.COLUMN_NAME_INTERACTION + " = " + userSongInteraction.getInteractionVerdict());
+                + ", " + DbContract.UserSongInteraction.COLUMN_NAME_NUM_POSITIVE_INTERACTIONS + " = " + userSongInteraction.getNum_positive_interactions()
+                + ", " + DbContract.UserSongInteraction.COLUMN_NAME_NUM_NEGATIVE_INTERACTIONS + " = " + userSongInteraction.getNum_negative_interactions());
         for (String whereArg : whereArgs)
             updateQuery.append(" WHERE " + whereArg + " AND ");
         updateQuery.delete(updateQuery.length() - 5, updateQuery.length());
