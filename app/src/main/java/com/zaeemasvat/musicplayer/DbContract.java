@@ -16,8 +16,7 @@ public final class DbContract {
         public static final String TABLE_NAME = "USER_SONG_INTERACTION";
         public static final String COLUMN_NAME_ID = "user_song_interaction_id";
         public static final String COLUMN_NAME_SONG_ID = "song_id";
-        public static final String COLUMN_NAME_NUM_POSITIVE_INTERACTIONS = "num_positive_interaction";
-        public static final String COLUMN_NAME_NUM_NEGATIVE_INTERACTIONS = "num_negative_interaction";
+        public static final String COLUMN_NAME_INTERACTION = "interaction";
     }
 
 

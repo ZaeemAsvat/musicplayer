@@ -38,7 +38,7 @@ public class FeatureExtractor {
         int bufferSize = 1024;
         int bufferOverlap = 128;
 //        new AndroidFFMPEGLocator(this);
-        Log.d("", filePath + "\n");
+
         InputStream inStream = new FileInputStream(filePath);
         AudioDispatcher dispatcher = new AudioDispatcher(new UniversalAudioInputStream(inStream, new TarsosDSPAudioFormat(sampleRate, bufferSize, 1, true, true)), bufferSize, bufferOverlap);
         final MFCC mfcc = new MFCC(bufferSize, sampleRate, 40, 50, 300, 3000);

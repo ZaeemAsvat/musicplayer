@@ -103,6 +103,8 @@ public class MainActivity extends AppCompatActivity
         songDbHelper.createTable();
         userSongInteractionDbHelper.dropTable();
         userSongInteractionDbHelper.createTable();
+        songFeatureDbHelper.dropTable();
+        songFeatureDbHelper.createTable();
       //  songDbHelper.deleteSong(null);
 
         // display songs from user's device
@@ -112,11 +114,12 @@ public class MainActivity extends AppCompatActivity
 
         fillSongList();
 
-        try {
-            extractFeaturesFromSongs();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
+        extractFeaturesFromSongs();
+
+        // testing
+        ArrayList<Song> songs = songDbHelper.selectSongs(null);
+        ArrayList<SongFeatures> songFeatures = songFeatureDbHelper.selectAllSongFeatures();
+        Log.d("", songFeatures.size() + " " + songs.size() + "\n");
 
         Collections.sort(songList, new Comparator<Song>() {
             public int compare(Song a, Song b) {
@@ -264,6 +267,9 @@ public class MainActivity extends AppCompatActivity
 
     public void fillSongList() {
 
+        // TODO: Try find a fix/workaround for bug where deleted songs still appear in MEDIA STORE
+        // TODO: Come up with a a way to remove songs that are not in the MEDIA STORE but in the db (properly deleted)
+
         //retrieve song info
         ContentResolver musicResolver = getContentResolver();
         Uri musicUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
@@ -318,7 +324,7 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    private void extractFeaturesFromSongs() throws FileNotFoundException {
+    private void extractFeaturesFromSongs() {
 
         // TODO: Test this function
 
@@ -331,29 +337,13 @@ public class MainActivity extends AppCompatActivity
                 // features of this song haven't been extracted yet (likely a newly added song)
 
                 // ------------------------ just testing ----------------------------------
+                try {
+                    float[] mfcc = new FeatureExtractor().getMFCC(song.getPath());
+                    SongFeatures thisSongFeatures = new SongFeatures(song.getId(), mfcc);
+                    songFeatureDbHelper.insertSongFeatures(thisSongFeatures);
+                    Log.d("", song.getPath() + "\n");
+                } catch (FileNotFoundException e) { e.printStackTrace(); }
 
-                float[] mfcc = new FeatureExtractor().getMFCC(song.getPath());
-                SongFeatures thisSongFeatures = new SongFeatures(song.getId(), mfcc);
-                songFeatureDbHelper.insertSongFeatures(thisSongFeatures);
-
-            }
-        }
-    }
-
-
-    private void updateUserSongInteractions() {
-
-        // TODO: Test this function
-
-        // get all songs
-        ArrayList<Song> songs = songDbHelper.selectSongs(null);
-
-        for (Song song : songs) {
-
-            if (userSongInteractionDbHelper.selectUserSongInteractions(song.getId()) == null) {
-                // this song's user interaction data hasn't been initialized yet
-
-                userSongInteractionDbHelper.insertUserSongInteraction(new UserSongInteraction(song.getId(), 0, 0));
             }
         }
     }
@@ -474,22 +464,16 @@ public class MainActivity extends AppCompatActivity
 
         int lengthPlayed = getCurrentPosition()/1000;
 
-        // get database entry for this song's user-song interaction data
-        UserSongInteraction thisSongInteractions = userSongInteractionDbHelper.selectUserSongInteractions(currSong.getId());
-
-        // record this interaction
-        if (lengthPlayed > 25)
-            thisSongInteractions.setNum_positive_interactions(thisSongInteractions.getNum_positive_interactions() + 1);
-        else
-            thisSongInteractions.setNum_negative_interactions(thisSongInteractions.getNum_negative_interactions() + 1);
+        // create object that holds user-song interaction data
+        UserSongInteraction thisSongInteraction = new UserSongInteraction(currSong.getId(), lengthPlayed > 25);
 
         // store interaction in UserSongInteraction database table
-        userSongInteractionDbHelper.insertUserSongInteraction(thisSongInteractions);
+        userSongInteractionDbHelper.insertUserSongInteraction(thisSongInteraction);
 
         // print user-song interaction db table (testing)
         ArrayList<UserSongInteraction> interactions = userSongInteractionDbHelper.selectUserSongInteractions(null);
         for (UserSongInteraction i : interactions) {
-            Log.d("", i.getSongId() + i.getNum_positive_interactions() + " " + i.getNum_negative_interactions() + "\n");
+            Log.d("", i.getSongId() + " " + i.getSongInteraction() + "\n");
             ArrayList<String> w = new ArrayList<>();
             w.add("" + DbContract.Song.COLUMN_NAME_ID + " = " + i.getSongId());
             Song s = songDbHelper.selectSong(w);
