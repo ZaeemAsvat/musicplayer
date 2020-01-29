@@ -37,4 +37,21 @@ public final class DbContract {
         public static final String COLUMN_NAME_SONG_ID = "song_id";
         public static final String COLUMN_NAME_MFCC = "feature_mfcc"; // multiple values exist
     }
+
+
+    // --------------------------------- SONG CLUSTER RELATION --------------------------------
+    public static class SongClusterRelation implements BaseColumns {
+        public static final String TABLE_NAME = "SONG_CLUSTER_RELATION";
+        public static final String COLUMN_NAME_SONG_ID = "song_id";
+        public static final String COLUMN_NAME_CLUSTER_NUM = "cluster_num";
+    }
+
+    // --------------------------------- CURRENT SONG SHUFFLED LIST --------------------------------
+    public static class SongShuffleRelation implements BaseColumns {
+        public static final String TABLE_NAME = "SONG_SHUFFLED_RELATION";
+        public static final String COLUMN_NAME_SONG_ID = "song_id";
+        public static final String COLUMN_NAME_SHUFFLE_ORDER_NUM = "shuffle_order_number";
+    }
+
+
 }
