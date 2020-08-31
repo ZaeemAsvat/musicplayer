@@ -1,4 +1,4 @@
-# musicplayer
+# Smart Music Player
 
 A Smart Music Player Application For Android (Work In Progress)
 
