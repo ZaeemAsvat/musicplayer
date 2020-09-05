@@ -8,8 +8,8 @@ Current application state and features:
 
 Next Features To Be Explored:
 - Smart, dynamic shuffling using more sophisticated clustering algorithms than K-Means as well as experimenting with other content-based features (spectral centroid, zero-crossing, etc)
-- Creating personalized playlists unique to each user
-- Categorizing tracks according to moods such as happy, sad, calm and energetic
+- Creating personalized playlists unique to each user - learning-to-rank methods
+- Categorizing tracks according to moods such as happy, sad, calm and energetic using classificstion methods - neural networks, logistic regression, decision trees, etc.
 - Improving GUI, and adding more activities and functionality that lets users create their own playlists, and creating pre-defined playlists based on artist, genre, album, etc 
 
 Note that this project is in early stages and the key features are still being implemented amd experimented with, therefore the application is not in the most stable state at this point in time. However progress is being made regularly and this repo will be updated accordingly.
