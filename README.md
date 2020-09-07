@@ -15,3 +15,5 @@ Next Features To Be Explored:
 Note that this project is in early stages and the key features are still being implemented amd experimented with, therefore the application is not in the most stable state at this point in time. However progress is being made regularly and this repo will be updated accordingly.
 
 This project is being implemented using Java in android studio, and all machine learning techniques have been applied using the WEKA library.
+
+![alt text](https://github.com/ZaeemAsvat/musicplayer/blob/master/image.jpg?raw=true)
