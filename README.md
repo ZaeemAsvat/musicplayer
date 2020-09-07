@@ -16,4 +16,4 @@ Note that this project is in early stages and the key features are still being i
 
 This project is being implemented using Java in android studio, and all machine learning techniques have been applied using the WEKA library.
 
-![alt text](https://github.com/ZaeemAsvat/musicplayer/blob/master/image.jpg?raw=true)
+![alt text](https://github.com/ZaeemAsvat/musicplayer/blob/master/Screenshot_20200906_013003_com.zaeemasvat.musicplayer.jpg?raw=true)
