@@ -44,9 +44,16 @@ public class MusicService extends Service implements
 
     private final IBinder musicBind = new MusicBinder();
 
-    private boolean shuffle = false;
-    private Random rand;
-    private HashSet<Integer> songPositionsNotYetPlayed;
+    // shuffle handling
+    private SongShuffleHandler songShuffleHandler;
+    private boolean shuffle = false, startShuffle = false;
+    private ArrayList<SongFeatures> songFeaturesList;
+    DbHelper db;
+    SongFeatureDbHelper songFeatureDbHelper;
+    //SongClusterRelationDbHelper songClusterRelationDbHelper = new SongClusterRelationDbHelper(db.getWritableDatabase());
+
+//    private Random rand;
+//    private HashSet<Integer> songPositionsNotYetPlayed;
 
     private MusicController musicController;
 
@@ -64,7 +71,9 @@ public class MusicService extends Service implements
 
         initMusicPlayer();
 
-        rand = new Random();
+        db = new DbHelper(MusicService.this);
+        songFeatureDbHelper  = new SongFeatureDbHelper(db.getWritableDatabase());
+//        rand = new Random();
     }
 
     public void initMusicPlayer(){
@@ -248,47 +257,40 @@ public class MusicService extends Service implements
     public void playNext() {
 
         if (shuffle) {
-            int songPositionTemp = getNextShuffledSongPosition();
-            if (songPositionTemp == -1)
-                setShuffle(false);
-            else {
-                songPosition = songPositionTemp;
-                songPositionsNotYetPlayed.remove(songPosition);
-            }
+
+            boolean positiveFeedback;
+            if (startShuffle) {
+                positiveFeedback = false;
+                startShuffle = false;
+            } else positiveFeedback = getPosition() / 1000 > 30; // set feedback based on how long previous song was listened to for
+
+            songPosition = songShuffleHandler.getNextSongPosition(positiveFeedback);
+            if (songPosition == -1) {
+                shuffle = false;
+                startShuffle = false;
+            } else playSong();
 
         }
-        else{
+        else {
             songPosition++;
             if(songPosition >= songs.size())
                 songPosition = 0;
+            playSong();
         }
-        playSong();
+
     }
 
     public void setShuffle (boolean shuffle){
         this.shuffle = shuffle;
         if (shuffle) {
-            songPositionsNotYetPlayed = new HashSet<>();
-            for (int i = 0; i < songs.size(); i++)
-                songPositionsNotYetPlayed.add(i);
+            songFeaturesList = new ArrayList<>();
+            for (Song song : songs)
+                songFeaturesList.add(songFeatureDbHelper.selectSongFeatures(song.getId()));
+            songShuffleHandler = new SongShuffleHandler(songs, songFeaturesList);
+            songShuffleHandler.setupHandler();
         }
     }
 
-    private int getNextShuffledSongPosition() {
-
-        int shuffledPosition = -1;
-
-        if (!songPositionsNotYetPlayed.isEmpty()) {
-            int n = rand.nextInt(songPositionsNotYetPlayed.size());
-            Iterator<Integer> iterator = songPositionsNotYetPlayed.iterator();
-            while (n >= 0) {
-                shuffledPosition = iterator.next();
-                n--;
-            }
-        }
-
-        return shuffledPosition;
-    }
 
     @Override
     public void onDestroy() {

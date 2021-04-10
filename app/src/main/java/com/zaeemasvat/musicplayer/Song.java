@@ -2,15 +2,16 @@ package com.zaeemasvat.musicplayer;
 
 public class Song {
 
-    private long id;
-    private String title;
-    private String artist;
-    private String path;
+    final private long id;
+    final private String title;
+    final private Long artistId;
 
-    Song (long id, String title, String artist, String path) {
+    final private String path;
+
+    Song (long id, String title, Long artistId, String path) {
         this.id = id;
         this.title = title;
-        this.artist = artist;
+        this.artistId = artistId;
         this.path = path;
     }
 
@@ -18,8 +19,8 @@ public class Song {
 
     public String getTitle() { return title; }
 
-    public String getArtist() {
-        return artist;
+    public Long getArtistId() {
+        return artistId;
     }
 
     public String getPath() { return path; }

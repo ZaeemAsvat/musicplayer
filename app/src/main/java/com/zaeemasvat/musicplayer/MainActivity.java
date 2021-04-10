@@ -38,6 +38,7 @@ public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, MediaPlayerControl {
 
     private ArrayList<Song> songList;
+    private ArrayList<Artist> artistList;
     private ListView songView;
 
     private MusicService musicSrv;
@@ -51,6 +52,7 @@ public class MainActivity extends AppCompatActivity
     // declare database table interfaces
     DbHelper db;
     SongDbHelper songDbHelper;
+    ArtistDbHelper artistDbHelper;
     UserSongInteractionDbHelper userSongInteractionDbHelper;
     SongFeatureDbHelper songFeatureDbHelper;
 
@@ -98,6 +100,7 @@ public class MainActivity extends AppCompatActivity
         songDbHelper = new SongDbHelper(db.getWritableDatabase());
         userSongInteractionDbHelper = new UserSongInteractionDbHelper(db.getWritableDatabase());
         songFeatureDbHelper = new SongFeatureDbHelper(db.getWritableDatabase());
+        artistDbHelper = new ArtistDbHelper(db.getWritableDatabase());
 
         songDbHelper.dropTable();
         songDbHelper.createTable();
@@ -112,7 +115,8 @@ public class MainActivity extends AppCompatActivity
         songView = (ListView) findViewById(R.id.song_list);
         songList = new ArrayList<>();
 
-        fillSongList();
+        fillSongAndArtistLists();
+
 
         extractFeaturesFromSongs();
 
@@ -265,7 +269,7 @@ public class MainActivity extends AppCompatActivity
 
     // ---------------------------------------------------------------------------------------------------
 
-    public void fillSongList() {
+    public void fillSongAndArtistLists() {
 
         // TODO: Try find a fix/workaround for bug where deleted songs still appear in MEDIA STORE
         // TODO: Come up with a a way to remove songs that are not in the MEDIA STORE but in the db (properly deleted)
@@ -292,19 +296,26 @@ public class MainActivity extends AppCompatActivity
                 // get references to this song's data
                 long thisId = musicCursor.getLong(idColumn);
                 String thisTitle = musicCursor.getString(titleColumn);
-                String thisArtist = musicCursor.getString(artistColumn);
+                String thisArtistName = musicCursor.getString(artistColumn);
                 String thisFullPath = musicCursor.getString(fullpathColumn);
 
-                // query the song in the database
-                ArrayList<String> songWhereQueryArgs = new ArrayList<>(3);
-                songWhereQueryArgs.add(DbContract.Song.COLUMN_NAME_ID + " = " + thisId);
+                // query artist in the database
+                Artist thisArtist = artistDbHelper.selectFirst(null, DbContract.Artist.COLUMN_NAME_NAME + " = " + thisArtistName, null, null, null, null);
+                if (thisArtist == null) {
+                    // artist does not exist in database, so we add it
+                    thisArtist = new Artist(thisArtistName);
+                    artistDbHelper.insert(thisArtist);
+                    thisArtist = artistDbHelper.selectFirst(null, DbContract.Artist.COLUMN_NAME_NAME + " = " + thisArtistName, null, null, null, null);;
+                }
+                artistList.add(thisArtist);
 
-                Song thisSong = songDbHelper.selectSong(songWhereQueryArgs);
+                // query the song in the database
+                Song thisSong = songDbHelper.selectFirst(null, DbContract.Song.COLUMN_NAME_ID + " = " + thisId, null, null, null, null);
 
                 if (thisSong == null) {
                     // song doesn't exist in the Song database table, so we add it
-                    thisSong = new Song(thisId, thisTitle, thisArtist, thisFullPath);
-                    songDbHelper.insertSong(thisSong);
+                    thisSong = new Song(thisId, thisTitle, thisArtist.getId(), thisFullPath);
+                    songDbHelper.insert(thisSong);
                 }
 
                 // add song to app interface
@@ -329,7 +340,7 @@ public class MainActivity extends AppCompatActivity
         // TODO: Test this function
 
         // get all songs
-        ArrayList<Song>songs = songDbHelper.selectSongs(null);
+        ArrayList<Song>songs = songDbHelper.select(null, null, null, null, null, null);
 
         for (Song song : songs) {
 
@@ -477,7 +488,7 @@ public class MainActivity extends AppCompatActivity
             ArrayList<String> w = new ArrayList<>();
             w.add("" + DbContract.Song.COLUMN_NAME_ID + " = " + i.getSongId());
             Song s = songDbHelper.selectSong(w);
-            Log.d("", "" + s.getTitle() + " " + s.getArtist() + "\n");
+            Log.d("", "" + s.getTitle() + " " + s.getArtistId() + "\n");
         }
     }
 

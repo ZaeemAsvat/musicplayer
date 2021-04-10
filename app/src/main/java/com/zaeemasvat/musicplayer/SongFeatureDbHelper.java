@@ -7,7 +7,7 @@ import android.util.Log;
 
 import java.util.ArrayList;
 
-public class SongFeatureDbHelper {
+public class SongFeatureDbHelper extends DbHelperBase<SongFeatures> {
 
     private SQLiteDatabase db;
 
@@ -26,34 +26,34 @@ public class SongFeatureDbHelper {
         db.execSQL(createTableBuilderStr.toString());
     }
 
-    public long insertSongFeatures (SongFeatures songFeatures) {
-
+    @Override
+    public void insert(SongFeatures entry) {
         ContentValues values = new ContentValues();
-        for (int i = 0; i < songFeatures.getSongFeatures().length; i++)
-            values.put(DbContract.SongFeatures.COLUMN_NAME_MFCC + "_" + i, songFeatures.getSongFeatures()[i]);
+        for (int i = 0; i < entry.getSongFeatures().length; i++)
+            values.put(DbContract.SongFeatures.COLUMN_NAME_MFCC + "_" + i, entry.getSongFeatures()[i]);
 
-        return db.insert(DbContract.SongFeatures.TABLE_NAME, null, values);
+        db.insert(DbContract.SongFeatures.TABLE_NAME, null, values);
     }
 
-    public SongFeatures selectSongFeatures (long song_id) {
+    @Override
+    public ArrayList<SongFeatures> select(String[] columns, String selection, String[] selectionArgs, String groupBy, String having, String orderBy) {
 
-        SongFeatures result = null;
+        ArrayList<SongFeatures> result = new ArrayList<>();
 
-        String selectQuery = "SELECT * FROM " + DbContract.SongFeatures.TABLE_NAME + " WHERE " +
-                            DbContract.SongFeatures.COLUMN_NAME_SONG_ID + " = " + song_id;
-
-        Cursor c = db.rawQuery(selectQuery, null);
+        Cursor c = db.query(DbContract.SongFeatures.TABLE_NAME, columns, selection, selectionArgs, groupBy, having, orderBy);
 
         if (c != null) {
 
             if (c.getCount() == 1) {
 
-                c.moveToFirst();
-                float[] featureVals = new float[c.getColumnCount() - 1];
-                for (int i = 0; i < featureVals.length; i++)
-                    featureVals[i] = c.getFloat(c.getColumnIndex(DbContract.SongFeatures.COLUMN_NAME_MFCC + "_" + i));
+                while (c.moveToNext()) {
+                    long song_id = c.getLong(c.getColumnIndex(DbContract.SongFeatures.COLUMN_NAME_SONG_ID));
+                    float[] featureVals = new float[c.getColumnCount() - 1];
+                    for (int i = 0; i < featureVals.length; i++)
+                        featureVals[i] = c.getFloat(c.getColumnIndex(DbContract.SongFeatures.COLUMN_NAME_MFCC + "_" + i));
 
-                result = new SongFeatures(song_id, featureVals);
+                    result.add(new SongFeatures(song_id, featureVals));
+                }
             }
 
             c.close();
@@ -62,39 +62,27 @@ public class SongFeatureDbHelper {
         return result;
     }
 
-    public ArrayList<SongFeatures> selectAllSongFeatures () {
-
-        ArrayList<SongFeatures> result = new ArrayList<>();
-
-        String selectQuery = "SELECT * FROM " + DbContract.SongFeatures.TABLE_NAME;
-
-        Cursor c = db.rawQuery(selectQuery, null);
-
-        if (c != null && c.getCount() > 0) {
-
-            while (c.moveToNext()) {
-                float[] featureVals = new float[c.getColumnCount() - 1];
-                for (int i = 0; i < featureVals.length; i++)
-                    featureVals[i] = c.getFloat(c.getColumnIndex(DbContract.SongFeatures.COLUMN_NAME_MFCC + "_" + i));
-
-                result.add(new SongFeatures(c.getLong(c.getColumnIndex(DbContract.SongFeatures.COLUMN_NAME_SONG_ID)), featureVals));
-            }
-
-            c.close();
-        }
-
-        return result;
+    @Override
+    public SongFeatures selectFirst(String[] columns, String selection, String[] selectionArgs, String groupBy, String having, String orderBy) {
+        SongFeatures songFeatures = null;
+        ArrayList<SongFeatures> songFeaturesList = select(columns, selection, selectionArgs, groupBy, having, orderBy);
+        if (!songFeaturesList.isEmpty())
+            songFeatures = songFeaturesList.get(0);
+        return songFeatures;
     }
 
-    public void deleteSongFeatures (ArrayList<String> whereArgs) {
+    @Override
+    public void update(SongFeatures entry, String whereClause, String[] whereArgs) {
+        ContentValues values = new ContentValues();
+        for (int i = 0; i < entry.getSongFeatures().length; i++)
+            values.put(DbContract.SongFeatures.COLUMN_NAME_MFCC + "_" + i, entry.getSongFeatures()[i]);
 
-        StringBuilder deleteQuery = new StringBuilder();
-        deleteQuery.append("DELETE FROM " + DbContract.SongFeatures.TABLE_NAME);
-        for (String whereArg : whereArgs)
-            deleteQuery.append(" WHERE " + whereArg + " AND ");
-        deleteQuery.delete(deleteQuery.length() - 5, deleteQuery.length());
+        db.update(DbContract.SongFeatures.TABLE_NAME, values, whereClause, whereArgs);
+    }
 
-        db.execSQL(deleteQuery.toString(), null);
+    @Override
+    public void delete(String whereClause, String[] whereArgs) {
+        db.delete(DbContract.SongFeatures.TABLE_NAME, whereClause, whereArgs);
     }
 
     public void dropTable () {

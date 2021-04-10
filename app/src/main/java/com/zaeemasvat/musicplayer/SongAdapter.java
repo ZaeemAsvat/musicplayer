@@ -13,10 +13,12 @@ import java.util.ArrayList;
 public class SongAdapter extends BaseAdapter {
 
     private ArrayList<Song> songs;
+    private ArrayList<Artist> artists;
     private LayoutInflater songInf;
 
-    public SongAdapter(Context c, ArrayList<Song> songs){
+    public SongAdapter(Context c, ArrayList<Song> songs, ArrayList<Artist> artists){
         this.songs = songs;
+        this.artists = artists;
         songInf = LayoutInflater.from(c);
     }
 
@@ -47,12 +49,13 @@ public class SongAdapter extends BaseAdapter {
         TextView songView = (TextView)songLay.findViewById(R.id.song_title);
         TextView artistView = (TextView)songLay.findViewById(R.id.song_artist);
 
-        //get song using position
+        //get song and artist using position
         Song currSong = songs.get(position);
+        Artist currArtist = artists.get(position);
 
         //get title and artist strings
         songView.setText(currSong.getTitle());
-        artistView.setText(currSong.getArtist());
+        artistView.setText(currArtist.getName());
 
         //set position as tag
         songLay.setTag(position);
