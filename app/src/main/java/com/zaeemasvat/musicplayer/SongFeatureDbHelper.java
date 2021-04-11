@@ -44,7 +44,7 @@ public class SongFeatureDbHelper extends DbHelperBase<SongFeatures> {
 
         if (c != null) {
 
-            if (c.getCount() == 1) {
+            if (c.getCount() > 0) {
 
                 while (c.moveToNext()) {
                     long song_id = c.getLong(c.getColumnIndex(DbContract.SongFeatures.COLUMN_NAME_SONG_ID));

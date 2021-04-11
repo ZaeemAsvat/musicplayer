@@ -7,7 +7,7 @@ import android.util.Log;
 
 import java.util.ArrayList;
 
-public class UserSongInteractionDbHelper {
+public class UserSongInteractionDbHelper extends DbHelperBase<UserSongInteraction>{
 
     private SQLiteDatabase db;
 
@@ -24,28 +24,21 @@ public class UserSongInteractionDbHelper {
                 DbContract.Song.TABLE_NAME + "(" + DbContract.Song.COLUMN_NAME_ID + "))");
     }
 
-    public long insertUserSongInteraction (UserSongInteraction userSongInteraction) {
-
+    @Override
+    public void insert(UserSongInteraction entry) {
         ContentValues values = new ContentValues();
-        values.put(DbContract.UserSongInteraction.COLUMN_NAME_SONG_ID, userSongInteraction.getSongId());
-        values.put(DbContract.UserSongInteraction.COLUMN_NAME_INTERACTION, userSongInteraction.getSongInteraction());
+        values.put(DbContract.UserSongInteraction.COLUMN_NAME_SONG_ID, entry.getSongId());
+        values.put(DbContract.UserSongInteraction.COLUMN_NAME_INTERACTION, entry.getSongInteraction());
 
-        return db.insert(DbContract.UserSongInteraction.TABLE_NAME, null, values);
+        db.insert(DbContract.UserSongInteraction.TABLE_NAME, null, values);
     }
 
-    public ArrayList<UserSongInteraction> selectUserSongInteractions (ArrayList<String> whereArgs) {
+    @Override
+    public ArrayList<UserSongInteraction> select(String[] columns, String selection, String[] selectionArgs, String groupBy, String having, String orderBy) {
 
         ArrayList<UserSongInteraction> result = new ArrayList<>();
 
-        StringBuilder selectQuery = new StringBuilder();
-        selectQuery.append("SELECT * FROM " + DbContract.UserSongInteraction.TABLE_NAME);
-        if (whereArgs != null) {
-            for (String whereArg : whereArgs)
-                selectQuery.append(" WHERE " + whereArg + " AND ");
-            selectQuery.delete(selectQuery.length() - 5, selectQuery.length());
-        }
-
-        Cursor c = db.rawQuery(selectQuery.toString(), null);
+        Cursor c = db.query(DbContract.UserSongInteraction.TABLE_NAME, columns, selection, selectionArgs, groupBy, having, orderBy);
 
         if (c != null && c.getCount() > 0) {
             while (c.moveToNext()) {
@@ -59,73 +52,27 @@ public class UserSongInteractionDbHelper {
         return result;
     }
 
-    public UserSongInteraction selectUserSongInteracions (ArrayList<String> whereArgs) {
-
-        UserSongInteraction result = null;
-
-        StringBuilder selectQuery = new StringBuilder();
-        selectQuery.append("SELECT * FROM " + DbContract.UserSongInteraction.TABLE_NAME);
-        for (String whereArg : whereArgs)
-            selectQuery.append(" WHERE " + whereArg + " AND ");
-        selectQuery.delete(selectQuery.length() - 5, selectQuery.length());
-
-        Cursor c = db.rawQuery(selectQuery.toString(), null);
-
-        if (c != null) {
-            c.moveToFirst();
-            result = new UserSongInteraction(c.getLong(c.getColumnIndex(DbContract.UserSongInteraction.COLUMN_NAME_SONG_ID)),
-                    c.getInt(c.getColumnIndex(DbContract.UserSongInteraction.COLUMN_NAME_INTERACTION)) > 0);
-            c.close();
-        }
-
-        return result;
+    @Override
+    public UserSongInteraction selectFirst(String[] columns, String selection, String[] selectionArgs, String groupBy, String having, String orderBy) {
+        UserSongInteraction userSongInteraction = null;
+        ArrayList<UserSongInteraction> userSongInteractions = select(columns, selection, selectionArgs, groupBy, having, orderBy);
+        if (!userSongInteractions.isEmpty())
+            userSongInteraction = userSongInteractions.get(0);
+        return userSongInteraction;
     }
 
-    public UserSongInteraction selectUserSongInteractions(long song_id) {
+    @Override
+    public void update(UserSongInteraction entry, String whereClause, String[] whereArgs) {
+        ContentValues values = new ContentValues();
+        values.put(DbContract.UserSongInteraction.COLUMN_NAME_SONG_ID, entry.getSongId());
+        values.put(DbContract.UserSongInteraction.COLUMN_NAME_INTERACTION, entry.getSongInteraction());
 
-        UserSongInteraction result = null;
-
-        String selectQuery = "SELECT * FROM " + DbContract.UserSongInteraction.TABLE_NAME + " WHERE " +
-                DbContract.SongFeatures.COLUMN_NAME_SONG_ID + " = " + song_id;
-
-        Cursor c = db.rawQuery(selectQuery, null);
-
-        if (c != null) {
-
-            if (c.getCount() == 1) {
-                c.moveToFirst();
-                result = new UserSongInteraction(song_id,
-                        c.getInt(c.getColumnIndex(DbContract.UserSongInteraction.COLUMN_NAME_INTERACTION)) > 0);
-            }
-
-            c.close();
-        }
-
-        return result;
+        db.update(DbContract.UserSongInteraction.TABLE_NAME, values, whereClause, whereArgs);
     }
 
-    public void deleteUserSongInteraction (ArrayList<String> whereArgs) {
-
-        StringBuilder deleteQuery = new StringBuilder();
-        deleteQuery.append("DELETE FROM " + DbContract.UserSongInteraction.TABLE_NAME);
-        for (String whereArg : whereArgs)
-            deleteQuery.append(" WHERE " + whereArg + " AND ");
-        deleteQuery.delete(deleteQuery.length() - 5, deleteQuery.length());
-
-        db.execSQL(deleteQuery.toString(), null);
-    }
-
-    public void updateUserSongInteraction (UserSongInteraction userSongInteraction, ArrayList<String> whereArgs) {
-
-        StringBuilder updateQuery = new StringBuilder();
-        updateQuery.append("UPDATE " + DbContract.UserSongInteraction.TABLE_NAME
-                + " SET " + DbContract.UserSongInteraction.COLUMN_NAME_SONG_ID + " = " + userSongInteraction.getSongId()
-                + ", " + DbContract.UserSongInteraction.COLUMN_NAME_INTERACTION + " = " + userSongInteraction.getSongInteraction());
-        for (String whereArg : whereArgs)
-            updateQuery.append(" WHERE " + whereArg + " AND ");
-        updateQuery.delete(updateQuery.length() - 5, updateQuery.length());
-
-        db.execSQL(updateQuery.toString(), null);
+    @Override
+    public void delete(String whereClause, String[] whereArgs) {
+        db.delete(DbContract.UserSongInteraction.TABLE_NAME, whereClause, whereArgs);
     }
 
     public void dropTable () {

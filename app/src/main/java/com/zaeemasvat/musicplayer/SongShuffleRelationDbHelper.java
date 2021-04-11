@@ -6,7 +6,7 @@ import android.database.sqlite.SQLiteDatabase;
 
 import java.util.ArrayList;
 
-public class SongShuffleRelationDbHelper {
+public class SongShuffleRelationDbHelper extends DbHelperBase<SongShuffleRelation> {
 
     private SQLiteDatabase db;
 
@@ -20,62 +20,56 @@ public class SongShuffleRelationDbHelper {
                 DbContract.Song.TABLE_NAME + "(" + DbContract.Song.COLUMN_NAME_ID + "))");
     }
 
-    public void insertSongShuffleRelation (SongShuffleRelation songShuffleRelation) {
-
+    @Override
+    public void insert(SongShuffleRelation entry) {
         ContentValues values = new ContentValues();
-        values.put(DbContract.SongShuffleRelation.COLUMN_NAME_SONG_ID, songShuffleRelation.getSongId());
-        values.put(DbContract.SongShuffleRelation.COLUMN_NAME_SHUFFLE_ORDER_NUM, songShuffleRelation.getShuffleOrderNum());
+        values.put(DbContract.SongShuffleRelation.COLUMN_NAME_SONG_ID, entry.getSongId());
+        values.put(DbContract.SongShuffleRelation.COLUMN_NAME_SHUFFLE_ORDER_NUM, entry.getShuffleOrderNum());
 
         db.insert(DbContract.SongShuffleRelation.TABLE_NAME, null, values);
     }
 
-    public SongShuffleRelation selectSongShuffleRelation (String whereArgs) {
+    @Override
+    public ArrayList<SongShuffleRelation> select(String[] columns, String selection, String[] selectionArgs, String groupBy, String having, String orderBy) {
 
-        SongShuffleRelation result = null;
+        ArrayList<SongShuffleRelation> result = new ArrayList<>();
 
-        String selectQuery = "SELECT * FROM " + DbContract.SongShuffleRelation.TABLE_NAME + " " + whereArgs;
-
-        Cursor c = db.rawQuery(selectQuery.toString(), null);
+        Cursor c = db.query(DbContract.SongShuffleRelation.TABLE_NAME, columns, selection, selectionArgs, groupBy, having, orderBy);
 
         if (c != null) {
             if (c.getCount() > 0) {
-                c.moveToFirst();
-                result = new SongShuffleRelation(c.getLong(c.getColumnIndex(DbContract.SongShuffleRelation.COLUMN_NAME_SONG_ID)),
-                        c.getInt(c.getColumnIndex(DbContract.SongShuffleRelation.COLUMN_NAME_SHUFFLE_ORDER_NUM)));
+                while (c.moveToNext())
+                    result.add(new SongShuffleRelation(c.getLong(c.getColumnIndex(DbContract.SongShuffleRelation.COLUMN_NAME_SONG_ID)),
+                        c.getInt(c.getColumnIndex(DbContract.SongShuffleRelation.COLUMN_NAME_SHUFFLE_ORDER_NUM))));
             }
             c.close();
         }
 
         return result;
+
     }
 
-    public ArrayList<SongShuffleRelation> selectSongShuffleRelations (String whereArgs) {
-
-        ArrayList<SongShuffleRelation> result = new ArrayList<>();
-
-        String selectQuery = "SELECT * FROM " + DbContract.SongShuffleRelation.TABLE_NAME + " " + whereArgs;
-
-        Cursor c = db.rawQuery(selectQuery, null);
-
-        if (c != null) {
-            if (c.getCount() > 0)
-                while (c.moveToNext())
-                    result.add(new SongShuffleRelation(c.getLong(c.getColumnIndex(DbContract.SongShuffleRelation.COLUMN_NAME_SONG_ID)),
-                            c.getInt(c.getColumnIndex(DbContract.SongShuffleRelation.COLUMN_NAME_SHUFFLE_ORDER_NUM))));
-            c.close();
-        }
-
-        return result;
+    @Override
+    public SongShuffleRelation selectFirst(String[] columns, String selection, String[] selectionArgs, String groupBy, String having, String orderBy) {
+        SongShuffleRelation songShuffleRelation = null;
+        ArrayList<SongShuffleRelation> songShuffleRelations = select(columns, selection, selectionArgs, groupBy, having, orderBy);
+        if (!songShuffleRelations.isEmpty())
+            songShuffleRelation = songShuffleRelations.get(0);
+        return songShuffleRelation;
     }
 
-    public void deleteSongShuffleRelations (String whereArgs) {
+    @Override
+    public void update(SongShuffleRelation entry, String whereClause, String[] whereArgs) {
+        ContentValues values = new ContentValues();
+        values.put(DbContract.SongShuffleRelation.COLUMN_NAME_SONG_ID, entry.getSongId());
+        values.put(DbContract.SongShuffleRelation.COLUMN_NAME_SHUFFLE_ORDER_NUM, entry.getShuffleOrderNum());
 
-        String deleteQuery = "DELETE * FROM " + DbContract.SongShuffleRelation.TABLE_NAME + " " + whereArgs;
-        db.execSQL(deleteQuery);
+        db.update(DbContract.SongShuffleRelation.TABLE_NAME, values, whereClause, whereArgs);
     }
 
-    public void deleteSongShuffleRelations (long song_id) {
-        deleteSongShuffleRelations("WHERE " + DbContract.SongShuffleRelation.COLUMN_NAME_SONG_ID + " = " + song_id);
+    @Override
+    public void delete(String whereClause, String[] whereArgs) {
+        db.delete(DbContract.SongShuffleRelation.TABLE_NAME, whereClause, whereArgs);
     }
 
     public void dropTable() {

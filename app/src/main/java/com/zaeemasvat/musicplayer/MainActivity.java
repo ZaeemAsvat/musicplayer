@@ -113,16 +113,16 @@ public class MainActivity extends AppCompatActivity
         // display songs from user's device
         
         songView = (ListView) findViewById(R.id.song_list);
+
         songList = new ArrayList<>();
-
+        artistList = new ArrayList<>();
         fillSongAndArtistLists();
-
 
         extractFeaturesFromSongs();
 
         // testing
-        ArrayList<Song> songs = songDbHelper.selectSongs(null);
-        ArrayList<SongFeatures> songFeatures = songFeatureDbHelper.selectAllSongFeatures();
+        ArrayList<Song> songs = songDbHelper.select(null, null, null, null, null, null);
+        ArrayList<SongFeatures> songFeatures = songFeatureDbHelper.select(null, null, null, null, null, null);
         Log.d("", songFeatures.size() + " " + songs.size() + "\n");
 
         Collections.sort(songList, new Comparator<Song>() {
@@ -131,7 +131,7 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        SongAdapter songAdt = new SongAdapter(this, songList);
+        SongAdapter songAdt = new SongAdapter(this, songList, artistList);
         songView.setAdapter(songAdt);
 
         setupMusicController();
@@ -344,14 +344,14 @@ public class MainActivity extends AppCompatActivity
 
         for (Song song : songs) {
 
-            if (songFeatureDbHelper.selectSongFeatures(song.getId()) == null) {
+            if (songFeatureDbHelper.selectFirst(null, null, null, null, null, null) == null) {
                 // features of this song haven't been extracted yet (likely a newly added song)
 
                 // ------------------------ just testing ----------------------------------
                 try {
                     float[] mfcc = new FeatureExtractor().getMFCC(song.getPath());
                     SongFeatures thisSongFeatures = new SongFeatures(song.getId(), mfcc);
-                    songFeatureDbHelper.insertSongFeatures(thisSongFeatures);
+                    songFeatureDbHelper.insert(thisSongFeatures);
                     Log.d("", song.getPath() + "\n");
                 } catch (FileNotFoundException e) { e.printStackTrace(); }
 
@@ -479,15 +479,14 @@ public class MainActivity extends AppCompatActivity
         UserSongInteraction thisSongInteraction = new UserSongInteraction(currSong.getId(), lengthPlayed > 25);
 
         // store interaction in UserSongInteraction database table
-        userSongInteractionDbHelper.insertUserSongInteraction(thisSongInteraction);
+        userSongInteractionDbHelper.insert(thisSongInteraction);
 
         // print user-song interaction db table (testing)
-        ArrayList<UserSongInteraction> interactions = userSongInteractionDbHelper.selectUserSongInteractions(null);
+        ArrayList<UserSongInteraction> interactions = userSongInteractionDbHelper.select(null, null, null, null, null, null);
         for (UserSongInteraction i : interactions) {
             Log.d("", i.getSongId() + " " + i.getSongInteraction() + "\n");
-            ArrayList<String> w = new ArrayList<>();
-            w.add("" + DbContract.Song.COLUMN_NAME_ID + " = " + i.getSongId());
-            Song s = songDbHelper.selectSong(w);
+            String w = "" + DbContract.Song.COLUMN_NAME_ID + " = " + i.getSongId();
+            Song s = songDbHelper.selectFirst(null, w, null, null, null, null);
             Log.d("", "" + s.getTitle() + " " + s.getArtistId() + "\n");
         }
     }
