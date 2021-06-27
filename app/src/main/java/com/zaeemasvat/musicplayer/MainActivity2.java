@@ -13,13 +13,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.MediaStore;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
-import android.support.v4.app.Fragment;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
@@ -31,11 +26,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ListView;
 import android.widget.MediaController;
-
-import com.google.android.material.tabs.TabLayoutMediator;
-import com.zaeemasvat.musicplayer.ui.main.SectionsPagerAdapter;
 
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
@@ -44,10 +35,6 @@ import java.util.Comparator;
 
 public class MainActivity2 extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, MediaController.MediaPlayerControl {
-
-    private ArrayList<Song> songList;
-    private ArrayList<Artist> artistList;
-    private ListView songView;
 
     private MusicService musicSrv;
     private Intent playIntent;
@@ -63,6 +50,9 @@ public class MainActivity2 extends AppCompatActivity
     ArtistDbHelper artistDbHelper;
     UserSongInteractionDbHelper userSongInteractionDbHelper;
     SongFeatureDbHelper songFeatureDbHelper;
+
+    private ArrayList<Song> songList;
+    private ArrayList<Artist> artistList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -120,11 +110,7 @@ public class MainActivity2 extends AppCompatActivity
 
         // display songs from user's device
 
-        songView = (ListView) findViewById(R.id.song_list);
-
-        songList = new ArrayList<>();
-        artistList = new ArrayList<>();
-        fillSongAndArtistLists();
+        updateDBAndFillSongAndArtistLists();
 
         extractFeaturesFromSongs();
 
@@ -276,7 +262,7 @@ public class MainActivity2 extends AppCompatActivity
 
     // ---------------------------------------------------------------------------------------------------
 
-    public void fillSongAndArtistLists() {
+    public void updateDBAndFillSongAndArtistLists() {
 
         // TODO: Try find a fix/workaround for bug where deleted songs still appear in MEDIA STORE
         // TODO: Come up with a a way to remove songs that are not in the MEDIA STORE but in the db (properly deleted)
@@ -289,14 +275,10 @@ public class MainActivity2 extends AppCompatActivity
         if (musicCursor != null && musicCursor.moveToFirst()) {
 
             //get column indices
-            int titleColumn = musicCursor.getColumnIndex
-                    (android.provider.MediaStore.Audio.Media.TITLE);
-            int idColumn = musicCursor.getColumnIndex
-                    (android.provider.MediaStore.Audio.Media._ID);
-            int artistColumn = musicCursor.getColumnIndex
-                    (android.provider.MediaStore.Audio.Media.ARTIST);
-            int fullpathColumn = musicCursor
-                    .getColumnIndex(MediaStore.Audio.Media.DATA);
+            int titleColumn = musicCursor.getColumnIndex(android.provider.MediaStore.Audio.Media.TITLE);
+            int idColumn = musicCursor.getColumnIndex(android.provider.MediaStore.Audio.Media._ID);
+            int artistColumn = musicCursor.getColumnIndex(android.provider.MediaStore.Audio.Media.ARTIST);
+            int fullpathColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.DATA);
 
             do {
 
@@ -323,9 +305,17 @@ public class MainActivity2 extends AppCompatActivity
                     // song doesn't exist in the Song database table, so we add it
                     thisSong = new Song(thisId, thisTitle, thisArtist.getId(), thisFullPath);
                     songDbHelper.insert(thisSong);
+                } else {
+                    if (!thisSong.getTitle().equals(thisTitle)
+                            || !thisSong.getPath().equals(thisFullPath)
+                            || thisSong.getArtistId() != thisArtist.getId()) {
+                        thisSong = new Song(thisId, thisTitle, thisArtist.getId(), thisFullPath);
+                        songDbHelper.update(thisSong, DbContract.Song.COLUMN_NAME_ID + " = " + thisId, null);
+
+                    }
                 }
 
-                // add song to app interface
+//                // add song to app interface
                 songList.add(thisSong);
 
             } while (musicCursor.moveToNext());
@@ -369,12 +359,12 @@ public class MainActivity2 extends AppCompatActivity
 
     // ------------------------------ MEDIA CONTROLLER ---------------------------------------
 
-
     @Override
+
     public void start() {
         musicSrv.start();
     }
-
+    
     @Override
     public boolean canPause() {
         return true;
